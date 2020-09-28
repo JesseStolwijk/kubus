@@ -1,5 +1,5 @@
 use amethyst::{
-    assets::{AssetStorage, Loader, Handle},
+    assets::{AssetStorage, Handle, Loader},
     core::transform::Transform,
     ecs::{Component, DenseVecStorage},
     prelude::*,
@@ -35,8 +35,6 @@ fn initialise_camera(world: &mut World) {
         .with(transform)
         .build();
 }
-
-
 
 #[derive(PartialEq, Eq)]
 pub enum Side {
@@ -91,8 +89,6 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
         .with(right_transform)
         .build();
 }
-
-
 
 fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     // Load the sprite sheet necessary to render the graphics.
