@@ -12,3 +12,4 @@ features = ["vulkan"]
 
 [dependencies]
 log = "0.4.11"
+voxel-mapper = { git = "https://github.com/amethyst/voxel-mapper", branch = "master" }

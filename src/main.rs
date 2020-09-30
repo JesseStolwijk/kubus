@@ -3,12 +3,12 @@ mod camera;
 extern crate amethyst;
 
 use amethyst::{Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, start_logger, StateData, StateEvent, Trans};
-use amethyst::assets::AssetLoaderSystemData;
+use amethyst::assets::{AssetLoaderSystemData, Handle};
 use amethyst::controls::{FlyControlBundle, FlyControlTag, HideCursor};
 use amethyst::core::{Transform, TransformBundle};
 use amethyst::core::ecs::{Builder, World, WorldExt};
 use amethyst::input::{InputBundle, is_key_down, is_mouse_button_down, StringBindings, VirtualKeyCode};
-use amethyst::renderer::{Camera, Material, MaterialDefaults, Mesh, RenderingBundle, RenderToWindow};
+use amethyst::renderer::{Camera, Material, MaterialDefaults, Mesh, RenderingBundle, RenderToWindow, RenderShaded3D};
 use amethyst::renderer::light::{Light, PointLight};
 use amethyst::renderer::palette::rgb::Rgb;
 use amethyst::renderer::plugins::RenderPbr3D;
@@ -26,6 +26,7 @@ impl SimpleState for GameState {
     fn on_start(&mut self, state_data: StateData<'_, GameData<'_, '_>>) {
         initialize_camera(state_data.world);
         initialize_sphere(state_data.world);
+        initialize_cubes(state_data.world);
         initialize_light(state_data.world);
         initialize_plane(state_data.world);
     }
@@ -98,6 +99,52 @@ fn initialize_plane(world: &mut World) {
         .build();
 }
 
+
+
+fn initialize_cubes(world: &mut World) {
+    let mesh = world.exec(|loader: AssetLoaderSystemData<'_, Mesh>| {
+        loader.load_from_data(
+            Shape::Cube
+                .generate::<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>(Some((0.1, 0.1, 0.1)))
+                .into(),
+            (),
+        )
+    });
+
+    let material_defaults = world.read_resource::<MaterialDefaults>().0.clone();
+    let material = world.exec(|loader: AssetLoaderSystemData<'_, Material>| {
+        loader.load_from_data(
+            Material {
+                ..material_defaults
+            },
+            (),
+        )
+    },
+    );
+
+    for z in 0..100 {
+        for y in 0..100 {
+            let iz = z as f32;
+            let iy = y as f32;
+
+            initialize_cube(iz, iy, world, mesh.clone(), material.clone());
+        }
+    }
+}
+
+fn initialize_cube(z: f32, y: f32, world: &mut World, mesh: Handle<Mesh>, material: Handle<Material>) {
+
+    let mut transform = Transform::default();
+    transform.set_translation_xyz(0.0, y, z);
+
+    world.create_entity()
+        .with(mesh)
+        .with(material)
+        .with(transform)
+        .build();
+}
+
+
 fn initialize_sphere(world: &mut World) {
     let mesh = world.exec(|loader: AssetLoaderSystemData<'_, Mesh>| {
         loader.load_from_data(
@@ -163,7 +210,8 @@ fn main() -> amethyst::Result<()> {
                     RenderToWindow::from_config(display_config)
                         .with_clear([0.529, 0.808, 0.98, 1.0]),
                 )
-                .with_plugin(RenderPbr3D::default()),
+                .with_plugin(RenderShaded3D::default())
+                .with_plugin(RenderSplattedTriplanarPbr::default()),
         )?;
 
     let mut game = Application::new(assets_dir, GameState, game_data)?;
