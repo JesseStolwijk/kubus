@@ -1,3 +1,5 @@
+mod camera;
+
 extern crate amethyst;
 
 use amethyst::{Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, start_logger, StateData, StateEvent, Trans};
@@ -16,6 +18,7 @@ use amethyst::renderer::shape::Shape;
 use amethyst::renderer::types::DefaultBackend;
 use amethyst::utils::application_root_dir;
 use amethyst::window::DisplayConfig;
+use crate::camera::initialize_camera;
 
 struct GameState;
 
@@ -24,7 +27,7 @@ impl SimpleState for GameState {
         initialize_camera(state_data.world);
         initialize_sphere(state_data.world);
         initialize_light(state_data.world);
-        initialize_square(state_data.world);
+        initialize_plane(state_data.world);
     }
 
 
@@ -64,7 +67,7 @@ fn initialize_light(world: &mut World) {
         .build();
 }
 
-fn initialize_square(world: &mut World) {
+fn initialize_plane(world: &mut World) {
     let mesh = world.exec(|loader: AssetLoaderSystemData<'_, Mesh>| {
         loader.load_from_data(
             Shape::Plane(Some((100, 100)))
@@ -124,21 +127,6 @@ fn initialize_sphere(world: &mut World) {
         .with(material)
         .with(transform)
         .build();
-}
-
-fn initialize_camera(world: &mut World) {
-    let mut transform = Transform::default();
-    transform.set_translation_xyz(0.0, 0.0, 10.0);
-
-    let entity = world.create_entity()
-        .with(Camera::standard_3d(1024.0, 768.0))
-        .with(transform)
-        .build();
-
-    world
-        .write_storage::<FlyControlTag>()
-        .insert(entity, Default::default())
-        .expect("Unable to attach FlyControlTag to camera");
 }
 
 fn main() -> amethyst::Result<()> {
